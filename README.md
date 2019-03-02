@@ -30,3 +30,10 @@ module.exports = {
   ]
 }
 ```
+
+# Deploy a new version
+
+1. Execute `npm version patch` - preferrable a patch or minor relea
+2. Execute `git push origin master --tags`
+3. Execute `npm publish`
+4. Withing the remote-observe web client, initiate a reload
