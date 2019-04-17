@@ -1,6 +1,6 @@
 {
   "name": "observe-weather",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A plugin for remote-observer that interfaces with a weather station",
   "main": "index.js",
   "scripts": {
