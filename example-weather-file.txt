@@ -1,4 +1,4 @@
-temperature=85
+temperature=50
 dewTemperature=42
 windSpeed=7.345
 windDirection=284.0425
