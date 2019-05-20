@@ -1,46 +1,112 @@
+var axios = require('axios');
+var sinon = require('sinon');
+
 var chai = require('chai');
-chai.use((chai, utils) => {
-  chai.use(require('dirty-chai'));
-  let convertFunc = () => {
-    expect(Number(this)).to.be.a('number');
-  };
-  chai.Assertion.addMethod('convertsToNumber', convertFunc);
-  chai.Assertion.addMethod('convertToNumber', convertFunc);
-});
+chai.use(require('dirty-chai'));
 var expect = chai.expect;
 
 var weather = require('../index.js');
-var config = {
-  filePath: 'example-weather-file.txt'
-};
 
 describe('Weather Module', () => {
-  before(() => {
-    //
-  });
-
-  after(() => {
-    //
-  });
-
-  beforeEach(() => {
-    //
-  });
-
-  afterEach(() => {
-    //
-  });
-
   describe('#getStatus', () => {
-    it('should retreive the weather status with correct fields', async () => {
+    var config = {
+      type: 'weather',
+      module: 'observe-weather',
+      filePath: 'example-weather-file.txt',
+      baseUrl: 'https://api.mockrovor.byu.edu/api/v1/observingconditions',
+      deviceNumber: 42,
+      clientId: 65535
+    };
+
+    var initialExpected = {
+      temperature: -1,
+      dewTemperature: 0,
+      windSpeed: 1,
+      windDirection: 2,
+      pressure: 3,
+      cloudCover: 4,
+      humidity: 5,
+      skyBrightness: 6,
+      rainRate: 7,
+      skyQuality: 8,
+      skyTemperature: 9,
+      seeing: 10,
+      windGust: 11
+    };
+    var expected = initialExpected;
+
+    var axiosStub = sinon.stub(axios, 'get');
+
+    before(() => {
+      var mockRespond = (value) => new Promise((resolve, reject) => resolve({
+        status: 200,
+        statusText: 'OK',
+        data: {
+          Value: value,
+          ClientTransactionID: 0,
+          ServerTransactionID: 0,
+          ErrorNumber: 0,
+          ErrorMessage: ''
+        }
+      }));
+
+      Object.getOwnPropertyNames(expected).map(prop => {
+        axiosStub.withArgs(sinon.match(new RegExp(`${config.baseUrl}/\\d+/${prop.toLowerCase()}?.+`)))
+          .returns(mockRespond(expected[prop]));
+      });
+    });
+
+    after(() => {
+      sinon.restore();
+    });
+
+    beforeEach(() => {
+      axiosStub.resetHistory();
+      expected = initialExpected;
+    });
+
+    afterEach(() => {
+      //
+    });
+
+    it('should retreive the correct weather status', async () => {
       let weatherStatus = await weather.getStatus(config);
+      // console.log(weatherStatus);
+      expect(axios.get.callCount).to.equal(Object.keys(expected).length);
       expect(weatherStatus).to.exist();
-      expect(weatherStatus).to.have.property('temperature').that.convertsToNumber();
-      expect(weatherStatus).to.have.property('dewTemperature').that.convertsToNumber();
-      expect(weatherStatus).to.have.property('windSpeed').that.convertsToNumber();
-      expect(weatherStatus).to.have.property('windDirection').that.convertsToNumber();
-      expect(weatherStatus).to.have.property('pressure').that.convertsToNumber();
-      expect(weatherStatus).to.have.property('rainFall').that.convertsToNumber();
+      expect(weatherStatus).to.deep.equal(expected);
+    });
+
+    it('should have "NaN" value for field where the the call has an error', async () => {
+      axiosStub.withArgs(sinon.match(new RegExp(`${config.baseUrl}/\\d+/skybrightness?.+`)))
+        .returns(new Promise((resolve, reject) => resolve({
+          status: 200,
+          statusText: 'OK',
+          data: {
+            Value: 0,
+            ClientTransactionID: 0,
+            ServerTransactionID: 0,
+            ErrorNumber: 1025,
+            ErrorMessage: 'Invalid value'
+          }
+        })));
+      expected.skyBrightness = NaN;
+
+      let weatherStatus = await weather.getStatus(config);
+      // console.log(weatherStatus);
+      expect(axios.get.callCount).to.equal(Object.keys(expected).length);
+      expect(weatherStatus).to.exist();
+      expect(weatherStatus).to.deep.equal(expected);
+    });
+
+    it('should catch and log error when a 400 response is received', async () => {
+      console.error('\t\t(Not yet implemented)';
+      // TODO: figure out what a 400 response looks like and how to properly mock it
+    });
+
+    it('should catch and log error when a 500 response is received', async () => {
+      console.error('\t\t(Not yet implemented)';
+      // TODO: figure out what a 500 response looks like and how to properly mock it
     });
   });
 });
