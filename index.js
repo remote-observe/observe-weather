@@ -4,18 +4,18 @@ var clientTransactionId = 1;
 exports.getStatus = async function(config) {
   let weather = {
     temperature: NaN,
-    dewTemperature: NaN,
+    dewPoint: NaN,
     windSpeed: NaN,
     windDirection: NaN,
-    pressure: NaN,
+    windGust: NaN,
     cloudCover: NaN,
     humidity: NaN,
     skyBrightness: NaN,
     rainRate: NaN,
     skyQuality: NaN,
     skyTemperature: NaN,
-    seeing: NaN,
-    windGust: NaN
+    starFwhm: NaN,
+    pressure: NaN
   };
 
   let weatherProperties = Object.getOwnPropertyNames(weather);

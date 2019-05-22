@@ -20,18 +20,18 @@ describe('Weather Module', () => {
 
     var initialExpected = {
       temperature: -1,
-      dewTemperature: 0,
+      dewPoint: 0,
       windSpeed: 1,
       windDirection: 2,
-      pressure: 3,
-      cloudCover: 4,
-      humidity: 5,
-      skyBrightness: 6,
-      rainRate: 7,
+      windGust: -3.2834679,
+      cloudCover: 0.4,
+      humidity: 0.05,
+      skyBrightness: 0.6561,
+      rainRate: 7.93417,
       skyQuality: 8,
       skyTemperature: 9,
-      seeing: 10,
-      windGust: 11
+      starFwhm: 10,
+      pressure: 11
     };
     var expected = initialExpected;
 
@@ -100,12 +100,12 @@ describe('Weather Module', () => {
     });
 
     it('should catch and log error when a 400 response is received', async () => {
-      console.error('\t\t(Not yet implemented)';
+      console.log('\t\t(Not yet implemented)');
       // TODO: figure out what a 400 response looks like and how to properly mock it
     });
 
     it('should catch and log error when a 500 response is received', async () => {
-      console.error('\t\t(Not yet implemented)';
+      console.log('\t\t(Not yet implemented)');
       // TODO: figure out what a 500 response looks like and how to properly mock it
     });
   });
