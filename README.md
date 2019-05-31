@@ -22,6 +22,8 @@ This controller calls the Alpaca API of the weather device and returns a status 
 }
 ```
 
+If for the controller can't retrieve any of the weather metrics for any reason, it will give the metric a null value.
+
 # Setup
 Inside the observe-client config, add the controller:
 

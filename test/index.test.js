@@ -18,7 +18,7 @@ describe('Weather Module', () => {
       clientId: 65535
     };
 
-    var initialExpected = {
+    var baseExpected = {
       temperature: -1,
       dewPoint: 0,
       windSpeed: 1,
@@ -33,27 +33,27 @@ describe('Weather Module', () => {
       starFwhm: 10,
       pressure: 11
     };
-    var expected = initialExpected;
+    var expected = {};
+    Object.assign(expected, baseExpected);
 
     var axiosStub = sinon.stub(axios, 'get');
 
-    before(() => {
-      var mockRespond = (value) => new Promise((resolve, reject) => resolve({
+    function mockRespond(value, errorNumber = 0, errorMessage = '') {
+      return new Promise((resolve, reject) => resolve({
         status: 200,
         statusText: 'OK',
         data: {
           Value: value,
           ClientTransactionID: 0,
           ServerTransactionID: 0,
-          ErrorNumber: 0,
-          ErrorMessage: ''
+          ErrorNumber: errorNumber,
+          ErrorMessage: errorMessage
         }
       }));
+    }
 
-      Object.getOwnPropertyNames(expected).map(prop => {
-        axiosStub.withArgs(sinon.match(new RegExp(`${config.baseUrl}/\\d+/${prop.toLowerCase()}?.+`)))
-          .returns(mockRespond(expected[prop]));
-      });
+    before(() => {
+      //
     });
 
     after(() => {
@@ -62,7 +62,11 @@ describe('Weather Module', () => {
 
     beforeEach(() => {
       axiosStub.resetHistory();
-      expected = initialExpected;
+      Object.assign(expected, baseExpected);
+      Object.getOwnPropertyNames(expected).map(prop => {
+        axiosStub.withArgs(sinon.match(new RegExp(`${config.baseUrl}/\\d+/${prop.toLowerCase()}.+`)))
+          .returns(mockRespond(expected[prop]));
+      });
     });
 
     afterEach(() => {
@@ -71,29 +75,31 @@ describe('Weather Module', () => {
 
     it('should retreive the correct weather status', async () => {
       let weatherStatus = await weather.getStatus(config);
-      // console.log(weatherStatus);
+
       expect(axios.get.callCount).to.equal(Object.keys(expected).length);
       expect(weatherStatus).to.exist();
       expect(weatherStatus).to.deep.equal(expected);
     });
 
-    it('should have "NaN" value for field where the the call has an error', async () => {
-      axiosStub.withArgs(sinon.match(new RegExp(`${config.baseUrl}/\\d+/skybrightness?.+`)))
-        .returns(new Promise((resolve, reject) => resolve({
-          status: 200,
-          statusText: 'OK',
-          data: {
-            Value: 0,
-            ClientTransactionID: 0,
-            ServerTransactionID: 0,
-            ErrorNumber: 1025,
-            ErrorMessage: 'Invalid value'
-          }
-        })));
-      expected.skyBrightness = NaN;
+    it('should retreive the correct weather status when missing optional search params', async () => {
+      let noClientConfig = {};
+      Object.assign(noClientConfig, config);
+      noClientConfig.clientId = null;
+
+      let weatherStatus = await weather.getStatus(noClientConfig);
+
+      expect(axios.get.callCount).to.equal(Object.keys(expected).length);
+      expect(weatherStatus).to.exist();
+      expect(weatherStatus).to.deep.equal(expected);
+    });
+
+    it('should have null value for field where the the call has an error', async () => {
+      axiosStub.withArgs(sinon.match(new RegExp(`${config.baseUrl}/\\d+/skybrightness.+`)))
+        .returns(mockRespond(0, 1025, 'Invalid value'));
+      expected.skyBrightness = null;
 
       let weatherStatus = await weather.getStatus(config);
-      // console.log(weatherStatus);
+
       expect(axios.get.callCount).to.equal(Object.keys(expected).length);
       expect(weatherStatus).to.exist();
       expect(weatherStatus).to.deep.equal(expected);
