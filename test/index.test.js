@@ -1,45 +1,20 @@
-var axios = require('axios');
-var sinon = require('sinon');
+const axios = require('axios');
+const sinon = require('sinon');
 
-var chai = require('chai');
+const chai = require('chai');
 chai.use(require('dirty-chai'));
-var expect = chai.expect;
+const expect = chai.expect;
 
-var weather = require('../index.js');
+const weather = require('../index.js');
 
 describe('Weather Module', () => {
   describe('#getStatus', () => {
-    var config = {
-      type: 'weather',
-      module: 'observe-weather',
-      filePath: 'example-weather-file.txt',
-      baseUrl: 'https://api.mockrovor.byu.edu/api/v1/observingconditions',
-      deviceNumber: 42,
-      clientId: 65535
-    };
+    let config;
+    let expected;
+    let axiosStub;
 
-    var baseExpected = {
-      temperature: -1,
-      dewPoint: 0,
-      windSpeed: 1,
-      windDirection: 2,
-      windGust: -3.2834679,
-      cloudCover: 0.4,
-      humidity: 0.05,
-      skyBrightness: 0.6561,
-      rainRate: 7.93417,
-      skyQuality: 8,
-      skyTemperature: 9,
-      starFwhm: 10,
-      pressure: 11
-    };
-    var expected = {};
-    Object.assign(expected, baseExpected);
-
-    var axiosStub = sinon.stub(axios, 'get');
-
-    function mockRespond(value, errorNumber = 0, errorMessage = '') {
-      return new Promise((resolve, reject) => resolve({
+    let mockRespond = (value, errorNumber = 0, errorMessage = '') =>
+      Promise.resolve({
         status: 200,
         statusText: 'OK',
         data: {
@@ -49,11 +24,10 @@ describe('Weather Module', () => {
           ErrorNumber: errorNumber,
           ErrorMessage: errorMessage
         }
-      }));
-    }
+      });
 
     before(() => {
-      //
+       axiosStub = sinon.stub(axios, 'get');
     });
 
     after(() => {
@@ -62,9 +36,31 @@ describe('Weather Module', () => {
 
     beforeEach(() => {
       axiosStub.resetHistory();
-      Object.assign(expected, baseExpected);
+      expected = {
+        temperature: -1,
+        dewPoint: 0,
+        windSpeed: 1,
+        windDirection: 2,
+        windGust: -3.2834679,
+        cloudCover: 0.4,
+        humidity: 0.05,
+        skyBrightness: 0.6561,
+        rainRate: 7.93417,
+        skyQuality: 8,
+        skyTemperature: 9,
+        starFwhm: 10,
+        pressure: 11
+      };
+      config = {
+        type: 'weather',
+        module: 'observe-weather',
+        filePath: 'example-weather-file.txt',
+        baseUrl: 'https://api.mockrovor.byu.edu/api/v1/observingconditions',
+        deviceNumber: 42,
+        clientId: 65535
+      }
       Object.getOwnPropertyNames(expected).map(prop => {
-        axiosStub.withArgs(sinon.match(new RegExp(`${config.baseUrl}/\\d+/${prop.toLowerCase()}.+`)))
+        axiosStub.withArgs(sinon.match(new RegExp(`${config.baseUrl}/\\d+/${prop.toLowerCase()}.*`)))
           .returns(mockRespond(expected[prop]));
       });
     });
@@ -82,11 +78,9 @@ describe('Weather Module', () => {
     });
 
     it('should retreive the correct weather status when missing optional search params', async () => {
-      let noClientConfig = {};
-      Object.assign(noClientConfig, config);
-      noClientConfig.clientId = null;
+      config.clientId = null;
 
-      let weatherStatus = await weather.getStatus(noClientConfig);
+      let weatherStatus = await weather.getStatus(config);
 
       expect(axios.get.callCount).to.equal(Object.keys(expected).length);
       expect(weatherStatus).to.exist();
@@ -94,7 +88,7 @@ describe('Weather Module', () => {
     });
 
     it('should have null value for field where the the call has an error', async () => {
-      axiosStub.withArgs(sinon.match(new RegExp(`${config.baseUrl}/\\d+/skybrightness.+`)))
+      axiosStub.withArgs(sinon.match(new RegExp(`${config.baseUrl}/\\d+/skybrightness.*`)))
         .returns(mockRespond(0, 1025, 'Invalid value'));
       expected.skyBrightness = null;
 

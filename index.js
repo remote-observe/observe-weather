@@ -1,41 +1,44 @@
 const axios = require('axios');
-var clientTransactionId = 1;
+let clientTransactionId = 1;
 
 exports.getStatus = async function(config) {
-  let weather = {
-    temperature: null,
-    dewPoint: null,
-    windSpeed: null,
-    windDirection: null,
-    windGust: null,
-    cloudCover: null,
-    humidity: null,
-    skyBrightness: null,
-    rainRate: null,
-    skyQuality: null,
-    skyTemperature: null,
-    starFwhm: null,
-    pressure: null
-  };
+  let weatherProperties = [
+    'temperature',
+    'dewPoint',
+    'windSpeed',
+    'windDirection',
+    'windGust',
+    'cloudCover',
+    'humidity',
+    'skyBrightness',
+    'rainRate',
+    'skyQuality',
+    'skyTemperature',
+    'starFwhm',
+    'pressure'
+  ];
 
-  let weatherProperties = Object.getOwnPropertyNames(weather);
-  await axios.all(weatherProperties.map(prop => getStat(config, prop.toLowerCase())))
+  return axios.all(weatherProperties.map(prop => getStat(config, prop.toLowerCase())))
     .then((results) => {
-      for (let i = 0; i < results.length; i++) {
+      let weather = {};
+      results.forEach((result, i) => {
         let weatherProperty = weatherProperties[i];
-        let result = results[i];
-        if (result.data.ErrorNumber === 0) {
-          weather[weatherProperty] = result.data.Value;
-        } else {
+        if (!result) {
+          weather[weatherProperty] = null;
+          console.error('\t\tError occurred in "' + weatherProperty.toLowerCase() + '" call to weather equipment');
+        } else if (result.data.ErrorNumber !== 0) {
+          weather[weatherProperty] = null;
           console.error('\t\tError occurred in "' + weatherProperty.toLowerCase() + '" call to weather equipment: Error ' +
             result.data.ErrorNumber + ' - ' + result.data.ErrorMessage);
+        } else {
+          weather[weatherProperty] = result.data.Value;
         }
-      }
+      });
+      return weather;
     })
     .catch((error) => {
       console.error(error);
     });
-  return weather;
 };
 
 function getStat(config, stat) {
@@ -47,7 +50,12 @@ function getStat(config, stat) {
   }
   url.search = searchParams;
 
-  let response = axios.get(url.toString());
+  let response = axios.get(url.toString())
+    .catch((error) => {
+      console.error(error);
+      // TODO: Return something more meaningful for logging puropses?
+      return null;
+    });
   clientTransactionId++;
   return response;
 }
