@@ -29,7 +29,7 @@
     "mocha": "^5",
     "npm": "^6.8.0",
     "nyc": "^13",
-    "sinon": "^7.0.0"
+    "sinon": "^7.3.0"
   },
   "dependencies": {
     "axios": "^0.18.0",

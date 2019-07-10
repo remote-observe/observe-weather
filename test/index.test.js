@@ -12,6 +12,7 @@ describe('Weather Module', () => {
     let config;
     let expected;
     let axiosStub;
+    let logSpy;
 
     let mockRespond = (value, errorNumber = 0, errorMessage = '') =>
       Promise.resolve({
@@ -26,8 +27,19 @@ describe('Weather Module', () => {
         }
       });
 
+    let mockError = (status, statusText, message) => {
+      let error = new Error();
+      error.response = {
+        status: status,
+        statusText: statusText,
+        data: message
+      }
+      return Promise.reject(error);
+    };
+
     before(() => {
        axiosStub = sinon.stub(axios, 'get');
+       logSpy = sinon.spy(console.log);
     });
 
     after(() => {
@@ -100,13 +112,33 @@ describe('Weather Module', () => {
     });
 
     it('should catch and log error when a 400 response is received', async () => {
-      console.log('\t\t(Not yet implemented)');
-      // TODO: figure out what a 400 response looks like and how to properly mock it
+      let errorMessage = 'MockException: you did something incorrect. at someFunction(Class someArg) in <someFile>:line 4';
+      axiosStub.withArgs(sinon.match(new RegExp(`${config.baseUrl}/\\d+/cloudcover.*`)))
+        .returns(mockError(400, 'Bad Request', errorMessage));
+      expected.cloudCover = null;
+
+      let weatherStatus = await weather.getStatus(config);
+
+      expect(axios.get.callCount).to.equal(Object.keys(expected).length);
+      expect(weatherStatus).to.exist();
+      expect(weatherStatus).to.deep.equal(expected);
+      expect(logSpy.calledWithMatch(errorMessage));
     });
 
     it('should catch and log error when a 500 response is received', async () => {
       console.log('\t\t(Not yet implemented)');
       // TODO: figure out what a 500 response looks like and how to properly mock it
+      let errorMessage = 'MockException: we did something incorrect. at someFunction(Class someArg) in <someFile>:line 5';
+      axiosStub.withArgs(sinon.match(new RegExp(`${config.baseUrl}/\\d+/dewpoint.*`)))
+        .returns(mockError(500, 'Internal Server Error', errorMessage));
+      expected.dewPoint = null;
+
+      let weatherStatus = await weather.getStatus(config);
+
+      expect(axios.get.callCount).to.equal(Object.keys(expected).length);
+      expect(weatherStatus).to.exist();
+      expect(weatherStatus).to.deep.equal(expected);
+      expect(logSpy.calledWithMatch(errorMessage));
     });
   });
 });
