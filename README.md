@@ -39,11 +39,14 @@ module.exports = {
       filePath: '/an/absolute/observe-weather/index.js',
       baseUrl: 'https://url.to.observatory.weather/api/v1/observingconditions',
       deviceNumber: 42,
-      clientId: 65535
+      clientId: 65535,
+      precision: 3
     }
   ]
 }
 ```
+
+The default numerical precision is 6.
 
 # Deploy a new version
 

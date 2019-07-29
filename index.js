@@ -32,7 +32,7 @@ exports.getStatus = async function(config) {
         } else if (result.data.ErrorNumber !== 0) {
           console.error(`${baseErrorMessage}: Error ${result.data.ErrorNumber} - ${result.data.ErrorMessage}`);
         } else {
-          weather[weatherProperty] = result.data.Value;
+          weather[weatherProperty] = roundToPrecision(result.data.Value, config.precision || 6);
         }
       });
       return weather;
@@ -62,4 +62,9 @@ function getStat(config, stat) {
     });
   clientTransactionId++;
   return response;
+};
+
+// We're going to round our numbers up (in the positive direction) to the nearest <precision>th place
+function roundToPrecision(num, precision) {
+  return +Number.parseFloat(num).toPrecision(precision);
 };
