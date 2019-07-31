@@ -1,7 +1,7 @@
 const axios = require('axios');
 let clientTransactionId = 1;
 
-exports.getStatus = async function(config) {
+exports.getStatus = async (config) => {
   let weatherProperties = [
     'temperature',
     'dewPoint',
@@ -46,7 +46,7 @@ exports.getStatus = async function(config) {
     });
 };
 
-function getStat(config, stat) {
+let getStat = (config, stat) => {
   let url = new URL(`${config.baseUrl}/${config.deviceNumber}/${stat}`);
   let searchParams = new URLSearchParams();
   searchParams.append('clienttransactionid', clientTransactionId);
@@ -65,6 +65,6 @@ function getStat(config, stat) {
 };
 
 // We're going to round our numbers up (in the positive direction) to the nearest <precision>th place
-function roundToPrecision(num, precision) {
+let roundToPrecision = (num, precision) => {
   return +Number.parseFloat(num).toPrecision(precision);
 };
