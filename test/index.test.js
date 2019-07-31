@@ -53,7 +53,7 @@ describe('Weather Module', () => {
         dewPoint: 0,
         windSpeed: 1,
         windDirection: 2,
-        windGust: -3.2834679,
+        windGust: -3.2834,
         cloudCover: 0.4,
         humidity: 0.05,
         skyBrightness: 0.6561,
@@ -111,6 +111,31 @@ describe('Weather Module', () => {
       expect(weatherStatus).to.deep.equal(expected);
     });
 
+    it('should round to correct precision', async () => {
+      axiosStub.withArgs(sinon.match(new RegExp(`${config.baseUrl}/\\d+/starfwhm.*`)))
+        .returns(mockRespond(156.498));
+      axiosStub.withArgs(sinon.match(new RegExp(`${config.baseUrl}/\\d+/temperature.*`)))
+        .returns(mockRespond(-1.4652419));
+      axiosStub.withArgs(sinon.match(new RegExp(`${config.baseUrl}/\\d+/skytemperature.*`)))
+        .returns(mockRespond(-15.647585));
+      axiosStub.withArgs(sinon.match(new RegExp(`${config.baseUrl}/\\d+/rainrate.*`)))
+        .returns(mockRespond(1.46524));
+      axiosStub.withArgs(sinon.match(new RegExp(`${config.baseUrl}/\\d+/pressure.*`)))
+        .returns(mockRespond(5463151.3));
+      expected.starFwhm = 156.5;
+      expected.temperature = -1.4652;
+      expected.skyTemperature = -15.648;
+      expected.rainRate = 1.4652;
+      expected.pressure = 5463200;
+      config.precision = 5;
+
+      let weatherStatus = await weather.getStatus(config);
+
+      expect(axios.get.callCount).to.equal(Object.keys(expected).length);
+      expect(weatherStatus).to.exist();
+      expect(weatherStatus).to.deep.equal(expected);
+    });
+
     it('should catch and log error when a 400 response is received', async () => {
       let errorMessage = 'MockException: you did something incorrect. at someFunction(Class someArg) in <someFile>:line 4';
       axiosStub.withArgs(sinon.match(new RegExp(`${config.baseUrl}/\\d+/cloudcover.*`)))
@@ -126,8 +151,6 @@ describe('Weather Module', () => {
     });
 
     it('should catch and log error when a 500 response is received', async () => {
-      console.log('\t\t(Not yet implemented)');
-      // TODO: figure out what a 500 response looks like and how to properly mock it
       let errorMessage = 'MockException: we did something incorrect. at someFunction(Class someArg) in <someFile>:line 5';
       axiosStub.withArgs(sinon.match(new RegExp(`${config.baseUrl}/\\d+/dewpoint.*`)))
         .returns(mockError(500, 'Internal Server Error', errorMessage));
